@@ -16,7 +16,7 @@
     <dependency>
       <groupId>mobile-backend-starter-android-client-with-AndroidStudio</groupId>
       <artifactId>endpoints-lib</artifactId>
-      <version>unspecified</version>
+      <version>0.0.2</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
