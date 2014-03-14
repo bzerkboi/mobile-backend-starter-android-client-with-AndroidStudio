@@ -6,6 +6,12 @@
   <artifactId>mobile-backend-starter-android-client</artifactId>
   <version>0.0.2</version>
   <packaging>aar</packaging>
+  <repositories>
+    <repository>
+      <id>Takeshi-test-repository</id>
+      <url>http://hagikuratakeshi.github.io/mobile-backend-starter-android-client-with-AndroidStudio/repository/</url>
+    </repository>
+  </repositories>
   <dependencies>
     <dependency>
       <groupId>mobile-backend-starter-android-client-with-AndroidStudio</groupId>
