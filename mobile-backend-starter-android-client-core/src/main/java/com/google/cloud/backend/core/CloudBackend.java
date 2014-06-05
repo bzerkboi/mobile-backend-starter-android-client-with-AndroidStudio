@@ -14,7 +14,6 @@
 
 package com.google.cloud.backend.core;
 
-import android.graphics.Bitmap;
 import android.util.Log;
 
 import com.google.api.client.extensions.android.http.AndroidHttp;
@@ -31,8 +30,6 @@ import com.google.cloud.backend.android.mobilebackend.model.QueryDto;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;

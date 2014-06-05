@@ -15,7 +15,6 @@
 package com.google.cloud.backend.core;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 
 /**
  * A handler class to handle an asynchronous callback from Cloud Backend. Used
