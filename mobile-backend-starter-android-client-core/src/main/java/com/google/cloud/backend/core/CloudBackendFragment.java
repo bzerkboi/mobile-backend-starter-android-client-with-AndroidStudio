@@ -26,9 +26,18 @@ import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.android.volley.Network;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.BasicNetwork;
+import com.android.volley.toolbox.DiskBasedCache;
+import com.android.volley.toolbox.HttpStack;
+import com.android.volley.toolbox.HurlStack;
+import com.android.volley.toolbox.ImageLoader;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.cloud.backend.GCMIntentService;
+import com.google.cloud.backend.volleyutil.BitmapLruCache;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -48,6 +57,9 @@ public class CloudBackendFragment extends Fragment {
 
     private CloudBackendMessaging mCloudBackend;
 
+    /** Image cache for Volley */
+    private ImageLoader.ImageCache mImageCache = new BitmapLruCache();
+
     /**
      * The listener to use upon completion of certain functions.
      */
@@ -64,6 +76,33 @@ public class CloudBackendFragment extends Fragment {
             mCloudBackend.handleQueryMessage(token);
         }
     };
+
+    private ImageLoader mImageLoader;
+
+    // Default maximum disk usage in bytes
+    private static final int DEFAULT_DISK_USAGE_BYTES = 25 * 1024 * 1024;
+
+    // Default cache folder name
+    private static final String DEFAULT_CACHE_DIR = "photos";
+
+    private RequestQueue newRequestQueue(Context context) {
+        // define cache folder
+        File rootCache = context.getExternalCacheDir();
+        if (rootCache == null) {
+            rootCache = context.getCacheDir();
+        }
+
+        File cacheDir = new File(rootCache, DEFAULT_CACHE_DIR);
+        cacheDir.mkdirs();
+
+        HttpStack stack = new HurlStack();
+        Network network = new BasicNetwork(stack);
+        DiskBasedCache diskBasedCache = new DiskBasedCache(cacheDir, DEFAULT_DISK_USAGE_BYTES);
+        RequestQueue queue = new RequestQueue(diskBasedCache, network);
+        queue.start();
+
+        return queue;
+    }
 
     /**
      * Returns {@link com.google.cloud.backend.core.CloudBackendMessaging} instance for this activity.
@@ -82,6 +121,10 @@ public class CloudBackendFragment extends Fragment {
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString() + " must implement OnListener");
         }
+
+        if (mImageLoader == null) {
+            mImageLoader = new ImageLoader(newRequestQueue(getActivity()), mImageCache);
+        }
     }
 
     /**
@@ -93,6 +136,7 @@ public class CloudBackendFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setRetainInstance(true);
 
         // init backend
         mCloudBackend = new CloudBackendMessaging(getActivity());
@@ -209,5 +253,13 @@ public class CloudBackendFragment extends Fragment {
      */
     protected String getAccountName() {
         return mCredential == null ? null : mCredential.getSelectedAccountName();
+    }
+
+    /**
+     * Returns the reference of the ImageLoader for Volley.
+     * @return
+     */
+    public ImageLoader getImageLoader() {
+        return mImageLoader;
     }
 }
