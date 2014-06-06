@@ -1,1 +1,1 @@
-include ':app', ':endpoints-lib', ':mobile-backend-starter-android-client-core'
+include ':app', ':endpoints-lib', ':mobile-backend-starter-android-client-core', ':MobileBackend'
