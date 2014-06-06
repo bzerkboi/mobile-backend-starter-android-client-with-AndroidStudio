@@ -21,5 +21,4 @@ android {
 dependencies {
     compile project(':endpoints-lib')
     compile project(':mobile-backend-starter-android-client-core')
-    compile 'com.mcxiaoke.volley:library:1.0.+@aar'
 }

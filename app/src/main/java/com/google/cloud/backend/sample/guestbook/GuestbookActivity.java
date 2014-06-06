@@ -63,7 +63,7 @@ public class GuestbookActivity extends Activity implements OnListener {
     private static final int INTRO_ACTIVITY_REQUEST_CODE = 1;
     private static final int SELECT_PICTURE = 2;
 
-    private static final String PROCESSING_FRAGMENT_TAG = "BACKEND_FRAGMENT";
+    public static final String PROCESSING_FRAGMENT_TAG = "BACKEND_FRAGMENT";
     private static final String SPLASH_FRAGMENT_TAG = "SPLASH_FRAGMENT";
 
     public static final String GUESTBOOK_SHARED_PREFS = "GUESTBOOK_SHARED_PREFS";

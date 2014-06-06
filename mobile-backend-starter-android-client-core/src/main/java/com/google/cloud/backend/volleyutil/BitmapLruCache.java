@@ -1,4 +1,4 @@
-package com.google.cloud.backend.sample.guestbook;
+package com.google.cloud.backend.volleyutil;
 
 import android.graphics.Bitmap;
 import android.support.v4.util.LruCache;

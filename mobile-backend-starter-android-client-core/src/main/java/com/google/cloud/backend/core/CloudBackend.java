@@ -433,7 +433,7 @@ public class CloudBackend {
     }
 
     /**
-     * Holder class for uploading a blob.
+     * Holder class for a parameter for uploading a blob.
      */
     public static class BlobUploadParam {
         public BlobAccessParam blobAccessParam;

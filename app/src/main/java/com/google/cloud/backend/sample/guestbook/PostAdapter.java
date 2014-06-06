@@ -1,5 +1,7 @@
 package com.google.cloud.backend.sample.guestbook;
 
+import android.app.Activity;
+import android.app.Fragment;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -7,18 +9,12 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-import com.android.volley.Network;
-import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.BasicNetwork;
-import com.android.volley.toolbox.DiskBasedCache;
-import com.android.volley.toolbox.HttpStack;
-import com.android.volley.toolbox.HurlStack;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.NetworkImageView;
 import com.google.cloud.backend.R;
+import com.google.cloud.backend.core.CloudBackendFragment;
 import com.google.cloud.backend.core.CloudEntity;
 
-import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Locale;
@@ -34,32 +30,11 @@ public class PostAdapter extends ArrayAdapter<CloudEntity> {
 
     private LayoutInflater mInflater;
 
-    private ImageLoader.ImageCache imageCache = new BitmapLruCache();
-    private ImageLoader mImageLoader = new ImageLoader(newRequestQueue(getContext()), imageCache);
+    private ImageLoader mImageLoader = getFragmentReference().getImageLoader();
 
-    // Default maximum disk usage in bytes
-    private static final int DEFAULT_DISK_USAGE_BYTES = 25 * 1024 * 1024;
-
-    // Default cache folder name
-    private static final String DEFAULT_CACHE_DIR = "photos";
-
-    private static RequestQueue newRequestQueue(Context context) {
-        // define cache folder
-        File rootCache = context.getExternalCacheDir();
-        if (rootCache == null) {
-            rootCache = context.getCacheDir();
-        }
-
-        File cacheDir = new File(rootCache, DEFAULT_CACHE_DIR);
-        cacheDir.mkdirs();
-
-        HttpStack stack = new HurlStack();
-        Network network = new BasicNetwork(stack);
-        DiskBasedCache diskBasedCache = new DiskBasedCache(cacheDir, DEFAULT_DISK_USAGE_BYTES);
-        RequestQueue queue = new RequestQueue(diskBasedCache, network);
-        queue.start();
-
-        return queue;
+    private CloudBackendFragment getFragmentReference() {
+        Fragment fragment = ((Activity) getContext()).getFragmentManager().findFragmentByTag(GuestbookActivity.PROCESSING_FRAGMENT_TAG);
+        return (CloudBackendFragment) fragment;
     }
 
     /**
@@ -85,7 +60,6 @@ public class PostAdapter extends ArrayAdapter<CloudEntity> {
 
             TextView message = (TextView) view.findViewById(R.id.messageContent);
             TextView signature = (TextView) view.findViewById(R.id.signature);
-            System.out.printf("Position %d, entityMessage", position, entityMessage);
             if (message != null) {
                 if (entityMessage.startsWith(GuestbookActivity.BLOB_PICTURE_MESSAGE_PREFIX +
                         GuestbookActivity.BLOB_PICTURE_DELIMITER)) {
