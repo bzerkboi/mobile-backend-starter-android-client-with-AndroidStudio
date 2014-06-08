@@ -389,7 +389,7 @@ public class CloudBackend {
             Log.i(Consts.TAG, "Response code : " + conn.getResponseCode());
             InputStream resultStream;
             int responseCode = conn.getResponseCode();
-            succeeded = (responseCode >= 200) && (responseCode <= 202);
+            succeeded = responseCode >= HttpURLConnection.HTTP_OK && responseCode < HttpURLConnection.HTTP_MULT_CHOICE;
             if (succeeded) {
                 resultStream = conn.getInputStream();
                 String resultMessage = getStringFromInputStream(resultStream);
