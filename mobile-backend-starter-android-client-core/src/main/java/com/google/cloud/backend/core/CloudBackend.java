@@ -363,7 +363,7 @@ public class CloudBackend {
         HttpURLConnection conn = null;
         boolean succeeded;
         try {
-            URL url = new URL(param.shortLivedUrl);
+            URL url = new URL(param.blobAccess.getShortLivedUrl());
             conn = (HttpURLConnection) url.openConnection();
             conn.setDoOutput(true);
             conn.setRequestMethod("PUT");
@@ -371,8 +371,11 @@ public class CloudBackend {
             if (param.blobAccessParam != null && param.blobAccessParam.contentType != null) {
                 conn.setRequestProperty("Content-type", param.blobAccessParam.contentType);
             }
-            if (param.blobAccessParam != null && param.blobAccessParam.accessMode.equals("PUBLIC_READ")) {
-                conn.setRequestProperty("x-goog-acl", "public-read");
+            if (param.blobAccess != null && param.blobAccess.getMandatoryHeaders() != null) {
+                for (String headerKeyValuePair : param.blobAccess.getMandatoryHeaders().split("\n")) {
+                    String[] keyValue = headerKeyValuePair.split(":");
+                    conn.setRequestProperty(keyValue[0], keyValue[1]);
+                }
             }
             conn.connect();
             BufferedOutputStream bos = new BufferedOutputStream(conn.getOutputStream());
@@ -437,7 +440,7 @@ public class CloudBackend {
      */
     public static class BlobUploadParam {
         public BlobAccessParam blobAccessParam;
+        public BlobAccess blobAccess;
         public InputStream inputStream;
-        public String shortLivedUrl;
     }
 }

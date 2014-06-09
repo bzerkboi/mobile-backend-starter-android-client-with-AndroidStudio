@@ -219,13 +219,13 @@ public class GuestbookActivity extends Activity implements OnListener {
             @Override
             public void onComplete(final BlobAccess blobAccessResult) {
                 CloudBackend.BlobUploadParam uploadParam = new CloudBackend.BlobUploadParam();
-                uploadParam.shortLivedUrl = blobAccessResult.getShortLivedUrl();
+                uploadParam.blobAccess = blobAccessResult;
                 uploadParam.inputStream = uploadInputStream;
                 uploadParam.blobAccessParam = blobAccessParam;
                 mProcessingFragment.getCloudBackend().uploadBlob(uploadParam, new CloudCallbackHandler<Boolean>() {
                     @Override
                     public void onComplete(Boolean booleanResult) {
-                        String message = booleanResult ? "Image upload succeeded" : "Failed to upload";
+                        String message = booleanResult ? "Upload completed " : "Failed to upload";
                         Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
 
                         if (booleanResult) {
