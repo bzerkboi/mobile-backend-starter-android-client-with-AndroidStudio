@@ -15,7 +15,7 @@
 package com.google.cloud.backend.core;
 
 import com.google.api.client.util.DateTime;
-import com.google.cloud.backend.android.mobilebackend.model.EntityDto;
+import com.google.cloud.backend.mobilebackend.model.EntityDto;
 
 import java.util.Date;
 import java.util.HashMap;

@@ -14,7 +14,7 @@
 
 package com.google.cloud.backend.core;
 
-import com.google.cloud.backend.android.mobilebackend.model.FilterDto;
+import com.google.cloud.backend.mobilebackend.model.FilterDto;
 
 import java.util.Arrays;
 import java.util.LinkedList;

@@ -16,7 +16,7 @@ package com.google.cloud.backend.core;
 
 import android.util.Base64;
 
-import com.google.cloud.backend.android.mobilebackend.model.QueryDto;
+import com.google.cloud.backend.mobilebackend.model.QueryDto;
 import com.google.gson.Gson;
 
 /**

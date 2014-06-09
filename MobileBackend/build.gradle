@@ -50,5 +50,6 @@ appengine {
     endpoints {
         getClientLibsOnBuild = true
         getDiscoveryDocsOnBuild = true
+        installClientLibsOnBuild = true
     }
 }
