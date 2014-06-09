@@ -24,7 +24,6 @@ import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.cloud.backend.mobilebackend.Mobilebackend;
 import com.google.cloud.backend.mobilebackend.model.BlobAccess;
-import com.google.cloud.backend.mobilebackend.model.ColorParam;
 import com.google.cloud.backend.mobilebackend.model.EntityDto;
 import com.google.cloud.backend.mobilebackend.model.EntityListDto;
 import com.google.cloud.backend.mobilebackend.model.QueryDto;
