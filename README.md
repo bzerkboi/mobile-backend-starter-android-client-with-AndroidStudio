@@ -35,10 +35,7 @@ For detailed setup instructions and documentation visit [Google App Engine devel
    deployed Mobile Backend [5]. Make sure that your Mobile Backend is configured
    with OPEN mode. Also update your `PROJECT_NUMBER` and `WEB_CLIENT_ID` with the values from your console project.
 
-5. Update the value of `DEFAULT_ROOT_URL` in
-   `endpoints-lib/src/main/java/com/google/cloud/backend/android/mobilebackend/Mobilebackend.java` to your own project.
-
-6. Run the application.
+5. Run the application.
 
 [1]: https://developers.google.com/appengine
 [2]: http://developer.android.com/index.html
