@@ -24,12 +24,14 @@ import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -104,6 +106,7 @@ public class GuestbookActivity extends Activity implements OnListener {
 
         // Create the view
         mPostsView = (ListView) findViewById(R.id.posts_list);
+        registerForContextMenu(mPostsView);
         mEmptyView = (TextView) findViewById(R.id.no_messages);
         mMessageTxt = (EditText) findViewById(R.id.message);
         mMessageTxt.setHint("Type message");
@@ -122,7 +125,6 @@ public class GuestbookActivity extends Activity implements OnListener {
                 onPictureButtonPressed(v);
             }
         });
-
         mSendBtn.setEnabled(false);
         mPictureBtn.setEnabled(true);
         mAnnounceTxt = (TextView) findViewById(R.id.announce_text);
@@ -193,6 +195,61 @@ public class GuestbookActivity extends Activity implements OnListener {
         }
         // call super method to ensure unhandled result codes are handled
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        Log.i(Consts.TAG, "View context menu" + v.toString());
+        menu.setHeaderTitle("Image Processing");
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.image_processing, menu);
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+        CloudEntity selectedEntity = mPosts.get(info.position);
+        if (!isCloudEntityPicture(selectedEntity)) {
+            Toast.makeText(getBaseContext(), "This menu is not available with the item selected",
+                    Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        switch (item.getItemId()) {
+            case R.id.transform_image:
+                transformImage(selectedEntity);
+                return true;
+            default:
+                return super.onContextItemSelected(item);
+        }
+    }
+
+    private void transformImage(CloudEntity selectedEntity) {
+        String entityMessage = selectedEntity.get("message").toString();
+        CloudCallbackHandler<BlobAccess> handlerForProcessImage = new CloudCallbackHandler<BlobAccess>() {
+            @Override
+            public void onComplete(final BlobAccess blobAccessResult) {
+                Toast.makeText(getBaseContext(), "Uploading the transformed image", Toast.LENGTH_SHORT).show();
+                String pictureMesage = BLOB_PICTURE_MESSAGE_PREFIX + BLOB_PICTURE_DELIMITER
+                        + blobAccessResult.getAccessUrl();
+                insertNewMessage(pictureMesage);
+            }
+
+            @Override
+            public void onError(final IOException exception) {
+                handleEndpointException(exception);
+            }
+        };
+
+        BucketAndObjectName bucketAndObjectName = parsePictureMessageToBucketAndObject(entityMessage);
+        CloudBackend.ImageTransformationParam param = new CloudBackend.ImageTransformationParam();
+        param.bucketName = bucketAndObjectName.bucketName;
+        param.objectName = bucketAndObjectName.objectName;
+        param.accessModeForTransformedImage = "PUBLIC_READ";
+
+        Toast.makeText(getBaseContext(), "Transforming the image", Toast.LENGTH_SHORT).show();
+        findViewById(R.id.progress_horizontal).setVisibility(View.VISIBLE);
+        mProcessingFragment.getCloudBackend().transformImage(param, handlerForProcessImage);
     }
 
     /**
@@ -453,7 +510,28 @@ public class GuestbookActivity extends Activity implements OnListener {
     private void handleEndpointException(IOException e) {
         Toast.makeText(this, e.toString(), Toast.LENGTH_LONG).show();
         mSendBtn.setEnabled(true);
-        findViewById(R.id.progress_horizontal).setVisibility(View.VISIBLE);
+        findViewById(R.id.progress_horizontal).setVisibility(View.GONE);
     }
 
+    private boolean isCloudEntityPicture(CloudEntity e) {
+        String entityMessage = e.get("message").toString();
+        return entityMessage.startsWith(GuestbookActivity.BLOB_PICTURE_MESSAGE_PREFIX +
+                GuestbookActivity.BLOB_PICTURE_DELIMITER);
+    }
+
+    private BucketAndObjectName parsePictureMessageToBucketAndObject(String pictureMessage) {
+        String imageUrl = pictureMessage.split(GuestbookActivity.BLOB_PICTURE_DELIMITER)[1];
+        String urlWithoutProtocol = imageUrl.split("://")[1];
+
+        String[] bucketAndObjectName = urlWithoutProtocol.split("/");
+        BucketAndObjectName result = new BucketAndObjectName();
+        result.bucketName = bucketAndObjectName[1];
+        result.objectName = bucketAndObjectName[2];
+        return result;
+    }
+
+    private static class BucketAndObjectName {
+        public String bucketName;
+        public String objectName;
+    }
 }

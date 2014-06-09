@@ -24,6 +24,7 @@ import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.cloud.backend.mobilebackend.Mobilebackend;
 import com.google.cloud.backend.mobilebackend.model.BlobAccess;
+import com.google.cloud.backend.mobilebackend.model.ColorParam;
 import com.google.cloud.backend.mobilebackend.model.EntityDto;
 import com.google.cloud.backend.mobilebackend.model.EntityListDto;
 import com.google.cloud.backend.mobilebackend.model.QueryDto;
@@ -328,6 +329,11 @@ public class CloudBackend {
         return coList;
     }
 
+    public BlobAccess transformImage(ImageTransformationParam param) throws IOException {
+        return getMBSEndpoint().blobEndpoint().transformImage(param.bucketName,
+                param.objectName, param.accessModeForTransformedImage).execute();
+    }
+
     /**
      * Returns an download url for the blob specified by the param.
      * @param param
@@ -443,4 +449,14 @@ public class CloudBackend {
         public BlobAccess blobAccess;
         public InputStream inputStream;
     }
+
+    /**
+     * Holder class for a parameter for processing the image color.
+     */
+    public static class ImageTransformationParam {
+        public String bucketName;
+        public String objectName;
+        public String accessModeForTransformedImage;
+    }
+
 }
