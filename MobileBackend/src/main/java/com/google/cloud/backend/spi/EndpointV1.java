@@ -31,8 +31,8 @@ import javax.inject.Named;
 /**
  * An endpoint for all CloudBackend requests.
  */
-@Api(name = "mobilebackend", namespace = @ApiNamespace(ownerDomain = "google.com",
-    ownerName = "google.com", packagePath = "cloud.backend.android"),
+@Api(name = "mobilebackend", namespace = @ApiNamespace(ownerDomain = "backend.cloud.google.com",
+        ownerName = "backend.cloud.google.com", packagePath = ""),
     useDatastoreForAdditionalConfig = AnnotationBoolean.TRUE)
 public class EndpointV1 {
 

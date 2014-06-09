@@ -21,7 +21,7 @@ import android.util.Log;
 
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.cloud.backend.GCMIntentService;
-import com.google.cloud.backend.android.mobilebackend.model.BlobAccess;
+import com.google.cloud.backend.mobilebackend.model.BlobAccess;
 import com.google.cloud.backend.core.CloudQuery.Order;
 import com.google.cloud.backend.core.CloudQuery.Scope;
 

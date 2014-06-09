@@ -37,7 +37,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.cloud.backend.R;
-import com.google.cloud.backend.android.mobilebackend.model.BlobAccess;
 import com.google.cloud.backend.core.CloudBackend;
 import com.google.cloud.backend.core.CloudBackendFragment;
 import com.google.cloud.backend.core.CloudBackendFragment.OnListener;
@@ -46,6 +45,7 @@ import com.google.cloud.backend.core.CloudEntity;
 import com.google.cloud.backend.core.CloudQuery.Order;
 import com.google.cloud.backend.core.CloudQuery.Scope;
 import com.google.cloud.backend.core.Consts;
+import com.google.cloud.backend.mobilebackend.model.BlobAccess;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -243,6 +243,7 @@ public class GuestbookActivity extends Activity implements OnListener {
             }
         };
         findViewById(R.id.progress_horizontal).setVisibility(View.VISIBLE);
+        Toast.makeText(getApplicationContext(), "Uploading the image", Toast.LENGTH_LONG).show();
         mProcessingFragment.getCloudBackend().getBlobUploadUrl(blobAccessParam, handlerForBlobUpload);
     }
 

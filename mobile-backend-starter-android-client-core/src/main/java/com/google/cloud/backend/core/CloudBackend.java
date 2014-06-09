@@ -22,11 +22,11 @@ import com.google.api.client.http.ExponentialBackOffPolicy;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.json.gson.GsonFactory;
-import com.google.cloud.backend.android.mobilebackend.Mobilebackend;
-import com.google.cloud.backend.android.mobilebackend.model.BlobAccess;
-import com.google.cloud.backend.android.mobilebackend.model.EntityDto;
-import com.google.cloud.backend.android.mobilebackend.model.EntityListDto;
-import com.google.cloud.backend.android.mobilebackend.model.QueryDto;
+import com.google.cloud.backend.mobilebackend.Mobilebackend;
+import com.google.cloud.backend.mobilebackend.model.BlobAccess;
+import com.google.cloud.backend.mobilebackend.model.EntityDto;
+import com.google.cloud.backend.mobilebackend.model.EntityListDto;
+import com.google.cloud.backend.mobilebackend.model.QueryDto;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
