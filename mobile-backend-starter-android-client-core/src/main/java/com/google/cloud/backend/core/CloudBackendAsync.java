@@ -21,9 +21,9 @@ import android.util.Log;
 
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.cloud.backend.GCMIntentService;
-import com.google.cloud.backend.mobilebackend.model.BlobAccess;
 import com.google.cloud.backend.core.CloudQuery.Order;
 import com.google.cloud.backend.core.CloudQuery.Scope;
+import com.google.cloud.backend.mobilebackend.model.BlobAccess;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -398,7 +398,7 @@ public class CloudBackendAsync extends CloudBackend {
     }
 
     /**
-     *
+     * Uploads the blob to Google Cloud Storage asynchronously.
      * @param param
      * @param handler
      */
@@ -407,6 +407,20 @@ public class CloudBackendAsync extends CloudBackend {
             @Override
             protected Boolean callBackend(BlobUploadParam param) throws IOException {
                 return CloudBackendAsync.super.uploadBlob(param);
+            }
+        }).start();
+    }
+
+    /**
+     * Changes the color in the server side asynchronously.
+     * @param param
+     * @param handler
+     */
+    public void transformImage(ImageTransformationParam param, CloudCallbackHandler<BlobAccess> handler) {
+        (new BackendCaller<ImageTransformationParam, BlobAccess>(param, handler) {
+            @Override
+            protected BlobAccess callBackend(ImageTransformationParam param) throws IOException {
+                return CloudBackendAsync.super.transformImage(param);
             }
         }).start();
     }

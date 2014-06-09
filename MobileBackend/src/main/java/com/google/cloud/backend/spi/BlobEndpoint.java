@@ -23,8 +23,17 @@ import com.google.api.server.spi.response.BadRequestException;
 import com.google.api.server.spi.response.InternalServerErrorException;
 import com.google.api.server.spi.response.NotFoundException;
 import com.google.api.server.spi.response.UnauthorizedException;
+import com.google.appengine.api.blobstore.BlobKey;
+import com.google.appengine.api.blobstore.BlobstoreService;
+import com.google.appengine.api.blobstore.BlobstoreServiceFactory;
+import com.google.appengine.api.images.Image;
+import com.google.appengine.api.images.ImagesService;
+import com.google.appengine.api.images.ImagesServiceFactory;
+import com.google.appengine.api.images.Transform;
 import com.google.appengine.api.users.User;
 import com.google.cloud.backend.config.StringUtility;
+
+import java.io.IOException;
 
 import javax.annotation.Nullable;
 import javax.inject.Named;
@@ -33,8 +42,8 @@ import javax.inject.Named;
  * Endpoint for managing blobs.
  */
 @Api(name = "mobilebackend", namespace = @ApiNamespace(ownerDomain = "backend.cloud.google.com",
-    ownerName = "backend.cloud.google.com", packagePath = ""),
-    useDatastoreForAdditionalConfig = AnnotationBoolean.TRUE)
+  ownerName = "backend.cloud.google.com", packagePath = ""),
+  useDatastoreForAdditionalConfig = AnnotationBoolean.TRUE)
 public class BlobEndpoint {
   /**
    * Pseudo user id used when Mobile Backend Starter is configured in Open mode and the requests are
@@ -65,19 +74,19 @@ public class BlobEndpoint {
   /**
    * Gets a signed URL that can be used to upload a blob.
    *
-   * @param bucketName Google Cloud Storage bucket to use for upload.
-   * @param objectPath path to the object in the bucket.
-   * @param accessMode controls how the uploaded blob can be accessed.
+   * @param bucketName  Google Cloud Storage bucket to use for upload.
+   * @param objectPath  path to the object in the bucket.
+   * @param accessMode  controls how the uploaded blob can be accessed.
    * @param contentType the MIME type of the object of be uploaded. Can be null.
-   * @param user the user making the request.
+   * @param user        the user making the request.
    * @throws com.google.api.server.spi.response.UnauthorizedException if the user is not authorized.
-   * @throws com.google.api.server.spi.response.BadRequestException if the bucketName or objectPath are not valid.
+   * @throws com.google.api.server.spi.response.BadRequestException   if the bucketName or objectPath are not valid.
    */
   @ApiMethod(httpMethod = HttpMethod.GET, path = "blobs/uploads/{bucketName}/{objectPath}")
   public BlobAccess getUploadUrl(@Named("bucketName") String bucketName,
-      @Named("objectPath") String objectPath, @Named("accessMode") BlobAccessMode accessMode,
-      @Nullable @Named("contentType") String contentType, User user)
-      throws UnauthorizedException, BadRequestException {
+                                 @Named("objectPath") String objectPath, @Named("accessMode") BlobAccessMode accessMode,
+                                 @Nullable @Named("contentType") String contentType, User user)
+    throws UnauthorizedException, BadRequestException {
     validateUser(user);
 
     validateBucketAndObjectPath(bucketName, objectPath);
@@ -87,7 +96,7 @@ public class BlobEndpoint {
     }
 
     return getBlobUrlForUpload(
-        bucketName, objectPath, accessMode, contentType != null ? contentType : "");
+      bucketName, objectPath, accessMode, contentType != null ? contentType : "");
   }
 
   /**
@@ -95,15 +104,15 @@ public class BlobEndpoint {
    *
    * @param bucketName Google Cloud Storage bucket where the object was uploaded.
    * @param objectPath path to the object in the bucket.
-   * @param user the user making the request.
+   * @param user       the user making the request.
    * @throws com.google.api.server.spi.response.UnauthorizedException if the user is not authorized.
-   * @throws com.google.api.server.spi.response.BadRequestException if the bucketName or objectPath are not valid.
-   * @throws com.google.api.server.spi.response.NotFoundException if the object doesn't exist.
+   * @throws com.google.api.server.spi.response.BadRequestException   if the bucketName or objectPath are not valid.
+   * @throws com.google.api.server.spi.response.NotFoundException     if the object doesn't exist.
    */
   @ApiMethod(httpMethod = HttpMethod.GET, path = "blobs/downloads/{bucketName}/{objectPath}")
   public BlobAccess getDownloadUrl(
-      @Named("bucketName") String bucketName, @Named("objectPath") String objectPath, User user)
-      throws UnauthorizedException, BadRequestException, NotFoundException {
+    @Named("bucketName") String bucketName, @Named("objectPath") String objectPath, User user)
+    throws UnauthorizedException, BadRequestException, NotFoundException {
     validateUser(user);
 
     validateBucketAndObjectPath(bucketName, objectPath);
@@ -118,15 +127,15 @@ public class BlobEndpoint {
    *
    * @param bucketName Google Cloud Storage bucket where the object was uploaded.
    * @param objectPath path to the object in the bucket.
-   * @param user the user making the request.
-   * @throws com.google.api.server.spi.response.UnauthorizedException if the user is not authorized.
-   * @throws com.google.api.server.spi.response.BadRequestException if the bucketName or objectPath are not valid.
+   * @param user       the user making the request.
+   * @throws com.google.api.server.spi.response.UnauthorizedException        if the user is not authorized.
+   * @throws com.google.api.server.spi.response.BadRequestException          if the bucketName or objectPath are not valid.
    * @throws com.google.api.server.spi.response.InternalServerErrorException when the operation failed.
    */
   @ApiMethod(httpMethod = HttpMethod.DELETE, path = "blobs/{bucketName}/{objectPath}")
   public void deleteBlob(
-      @Named("bucketName") String bucketName, @Named("objectPath") String objectPath, User user)
-      throws UnauthorizedException, BadRequestException, InternalServerErrorException {
+    @Named("bucketName") String bucketName, @Named("objectPath") String objectPath, User user)
+    throws UnauthorizedException, BadRequestException, InternalServerErrorException {
     validateUser(user);
 
     validateBucketAndObjectPath(bucketName, objectPath);
@@ -143,14 +152,69 @@ public class BlobEndpoint {
     }
   }
 
+  @ApiMethod(httpMethod = ApiMethod.HttpMethod.POST,
+    path = "images/process/{bucketName}/{objectPath}")
+  public BlobAccess transformImage(@Named("bucketName") String bucketName,
+                                   @Named("objectPath") String objectPath,
+                                   @Named("accessMode") BlobAccessMode accessMode,
+                                   User user)
+    throws BadRequestException, UnauthorizedException, InternalServerErrorException {
+    validateUser(user);
+    checkDeletePermissions(bucketName, objectPath, user);
+    BlobMetadata metadata = BlobManager.getBlobMetadata(bucketName, objectPath);
+    String transformedObjectPath = String.valueOf("transformed-cloudguestbook-picture-" + System.currentTimeMillis());
+    BlobAccess blobAccess = getBlobUrlForUpload(bucketName, transformedObjectPath, metadata.getAccessMode(), "");
+
+    if (!reserveNameIfAvailable(bucketName, transformedObjectPath, accessMode, user)) {
+      throw new UnauthorizedException("You don't have permissions to upload the transformed image");
+    }
+
+    try {
+      Image transformedImage = transformImage(bucketName, objectPath, new ImageTransformer() {
+        @Override
+        public Image transform(Image oldImage) {
+          ImagesService imagesService = ImagesServiceFactory.getImagesService();
+          // Assuming the original image size isn't 300x200.
+          Transform resize = ImagesServiceFactory.makeResize(200, 300);
+          return imagesService.applyTransform(resize, oldImage);
+        }
+      });
+      boolean uploadResult = BlobManager.uploadImagetoGcs(blobAccess, transformedImage);
+      if (!uploadResult) {
+        throw new InternalServerErrorException("Image upload failed");
+      }
+    } catch (IOException e) {
+      throw new InternalServerErrorException(e.getMessage(), e);
+    }
+
+    return blobAccess;
+  }
+
+  /**
+   * Apply the transform to the image obtained from the specified path in the Google Cloud Storage.
+   *
+   * @param bucketName  the bucket name of the Google Cloud Storage.
+   * @param objectName  the object path to the image in the Google Cloud Storage.
+   * @param transformer the image transformer
+   * @return
+   */
+  private Image transformImage(String bucketName, String objectName, ImageTransformer transformer) {
+    BlobstoreService blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
+    BlobKey blobKey = blobstoreService.createGsBlobKey(
+      "/gs/" + bucketName + "/" + objectName);
+    Image image = ImagesServiceFactory.makeImageFromBlob(blobKey);
+    return transformer.transform(image);
+  }
+
+
   private BlobAccess getBlobUrlForUpload(
-      String bucketName, String objectPath, BlobAccessMode accessMode, String contentType) {
+    String bucketName, String objectPath, BlobAccessMode accessMode, String contentType) {
     String signedUrl = BlobUrlManager.getUploadUrl(
-        bucketName, objectPath, contentType, accessMode == BlobAccessMode.PUBLIC_READ);
+      bucketName, objectPath, contentType, accessMode == BlobAccessMode.PUBLIC_READ);
 
     if (accessMode == BlobAccessMode.PUBLIC_READ) {
       return new BlobAccess(signedUrl, BlobUrlManager.getAccessUrl(bucketName, objectPath),
-          BlobUrlManager.getMandatoryHeaders(true));
+        BlobUrlManager.getMandatoryHeaders(true));
     } else {
       return new BlobAccess(signedUrl);
     }
@@ -166,7 +230,7 @@ public class BlobEndpoint {
   }
 
   private void validateBucketAndObjectPath(String bucketName, String objectPath)
-      throws BadRequestException {
+    throws BadRequestException {
     if (StringUtility.isNullOrEmpty(bucketName) || StringUtility.isNullOrEmpty(objectPath)) {
       throw new BadRequestException("BucketName and objectPath cannot be null");
     }
@@ -189,11 +253,11 @@ public class BlobEndpoint {
    * @param bucketName Google Cloud Storage bucket where the object was uploaded.
    * @param objectPath path to the object in the bucket.
    * @param accessMode controls how the uploaded blob can be accessed.
-   * @param user the user making the request.
+   * @param user       the user making the request.
    * @return false if the object already exists and is owned by a different user; true otherwise.
    */
   private boolean reserveNameIfAvailable(
-      String bucketName, String objectPath, BlobAccessMode accessMode, User user) {
+    String bucketName, String objectPath, BlobAccessMode accessMode, User user) {
 
     return BlobManager.tryStoreBlobMetadata(bucketName, objectPath, accessMode, getUserId(user));
   }
@@ -204,12 +268,12 @@ public class BlobEndpoint {
    *
    * @param bucketName Google Cloud Storage bucket where the object was uploaded.
    * @param objectPath path to the object in the bucket.
-   * @param user the user making the request.
+   * @param user       the user making the request.
    * @throws com.google.api.server.spi.response.UnauthorizedException if the user is not authorized.
-   * @throws com.google.api.server.spi.response.NotFoundException if the object doesn't exist.
+   * @throws com.google.api.server.spi.response.NotFoundException     if the object doesn't exist.
    */
   private void checkReadObjectPermissions(String bucketName, String objectPath, User user)
-      throws UnauthorizedException, NotFoundException {
+    throws UnauthorizedException, NotFoundException {
     BlobMetadata metadata = BlobManager.getBlobMetadata(bucketName, objectPath);
     if (metadata == null) {
       throw new NotFoundException("Blob doesn't exist.");
@@ -221,7 +285,7 @@ public class BlobEndpoint {
     }
 
     if (metadata.getAccessMode() != BlobAccessMode.PUBLIC_READ
-        && metadata.getAccessMode() != BlobAccessMode.PUBLIC_READ_FOR_APP_USERS) {
+      && metadata.getAccessMode() != BlobAccessMode.PUBLIC_READ_FOR_APP_USERS) {
       throw new UnauthorizedException("You don't have permissions to download this object");
     }
   }
@@ -232,12 +296,12 @@ public class BlobEndpoint {
    *
    * @param bucketName Google Cloud Storage bucket where the object was uploaded.
    * @param objectPath path to the object in the bucket.
-   * @param user the user making the request.
+   * @param user       the user making the request.
    * @return true if the object may exist and delete operation should proceed; false otherwise.
    * @throws com.google.api.server.spi.response.UnauthorizedException if the user is not authorized.
    */
   private boolean checkDeletePermissions(String bucketName, String objectPath, User user)
-      throws UnauthorizedException {
+    throws UnauthorizedException {
     BlobMetadata metadata = BlobManager.getBlobMetadata(bucketName, objectPath);
     if (metadata == null) {
       return false;

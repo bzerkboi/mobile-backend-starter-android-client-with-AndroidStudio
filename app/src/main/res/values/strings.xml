@@ -12,6 +12,7 @@
     <string name="send_message">sendMessage</string>
     <string name="empty_string"></string>
     <string name="no_messages">No messages yet</string>
+    <string name="transform_image">Transform Image</string>
 
     <string name="intro_1_title">Guest Book Sample App</string>
     <string name="intro_1_dscrp">Welcome to the Mobile Backend Starter sample guestbook Android app. This simple app allows users to send messages to other instances of the app running on Android or iOS devices. Play with this application to get started.  There is no additional backend coding required.</string>

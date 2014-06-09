@@ -19,9 +19,14 @@ import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.Transaction;
 import com.google.appengine.api.datastore.TransactionOptions;
+import com.google.appengine.api.images.Image;
 import com.google.cloud.backend.spi.BlobEndpoint.BlobAccessMode;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -47,7 +52,7 @@ class BlobManager {
   public static BlobMetadata getBlobMetadata(String bucketName, String objectPath) {
     try {
       Entity metadataEntity =
-          dataStore.get(BlobMetadata.getKey(getCanonicalizedResource(bucketName, objectPath)));
+        dataStore.get(BlobMetadata.getKey(getCanonicalizedResource(bucketName, objectPath)));
       return new BlobMetadata(metadataEntity);
     } catch (EntityNotFoundException e) {
       return null;
@@ -60,12 +65,12 @@ class BlobManager {
    * @param bucketName Google Cloud Storage bucket for this blob.
    * @param objectPath path to the object in the bucket.
    * @param accessMode controls how the blob can be accessed.
-   * @param ownerId the id of the owner.
+   * @param ownerId    the id of the owner.
    * @return true if metadata was stored; false if the blob already exists but has a different
-   *         owner.
+   * owner.
    */
   public static boolean tryStoreBlobMetadata(
-      String bucketName, String objectPath, BlobAccessMode accessMode, String ownerId) {
+    String bucketName, String objectPath, BlobAccessMode accessMode, String ownerId) {
 
     Transaction tx = dataStore.beginTransaction(TransactionOptions.Builder.withXG(true));
     try {
@@ -82,7 +87,7 @@ class BlobManager {
       }
 
       metadata =
-          new BlobMetadata(getCanonicalizedResource(bucketName, objectPath), accessMode, ownerId);
+        new BlobMetadata(getCanonicalizedResource(bucketName, objectPath), accessMode, ownerId);
       dataStore.put(metadata.getEntity());
       tx.commit();
       return true;
@@ -104,6 +109,60 @@ class BlobManager {
    */
   public static boolean deleteBlob(String bucketName, String objectPath) {
     return deleteBlobFromGcs(bucketName, objectPath) && deleteBlobMetadata(bucketName, objectPath);
+  }
+
+  private static final int BUFFER_SIZE_FOR_UPLOAD = 4096;
+
+  public static Boolean uploadImagetoGcs(BlobAccess blobAccess, Image image) throws IOException {
+    HttpURLConnection conn = null;
+    boolean succeeded;
+    try {
+      URL url = new URL(blobAccess.getShortLivedUrl());
+      conn = (HttpURLConnection) url.openConnection();
+      conn.setDoOutput(true);
+      conn.setRequestMethod("PUT");
+
+      if (blobAccess != null && blobAccess.getMandatoryHeaders() != null) {
+        for (String headerKeyValuePair : blobAccess.getMandatoryHeaders().split("\n")) {
+          String[] keyValue = headerKeyValuePair.split(":");
+          conn.setRequestProperty(keyValue[0], keyValue[1]);
+        }
+      }
+      conn.connect();
+      BufferedOutputStream bos = new BufferedOutputStream(conn.getOutputStream());
+      InputStream bis = new BufferedInputStream(new ByteArrayInputStream(image.getImageData()));
+
+      byte[] buffer = new byte[BUFFER_SIZE_FOR_UPLOAD];
+      int bytesRead;
+      while ((bytesRead = bis.read(buffer)) > 0) {
+        bos.write(buffer, 0, bytesRead);
+        bos.flush();
+      }
+      bos.close();
+
+      InputStream resultStream;
+      int responseCode = conn.getResponseCode();
+      succeeded = responseCode >= HttpURLConnection.HTTP_OK && responseCode < HttpURLConnection.HTTP_MULT_CHOICE;
+      if (succeeded) {
+        resultStream = conn.getInputStream();
+        String resultMessage = getStringFromInputStream(resultStream);
+        logger.info(resultMessage);
+      } else {
+        resultStream = conn.getErrorStream();
+        String errorMessage = getStringFromInputStream(resultStream);
+        logger.severe(errorMessage);
+      }
+    } finally {
+      if (conn != null) {
+        conn.disconnect();
+      }
+    }
+    return succeeded;
+  }
+
+  private static String getStringFromInputStream(InputStream inputStream) {
+    java.util.Scanner s = new java.util.Scanner(inputStream).useDelimiter("\\A");
+    return s.hasNext() ? s.next() : "";
   }
 
   /**
@@ -141,12 +200,12 @@ class BlobManager {
         if (status < HttpURLConnection.HTTP_INTERNAL_ERROR) {
           // HTTP 3xx or 4xxx => log, do not retry.
           logger.log(Level.WARNING,
-              "Deleting " + objectPath + " from " + bucketName + " returned " + status);
+            "Deleting " + objectPath + " from " + bucketName + " returned " + status);
           return false;
         }
 
         logger.log(Level.INFO, "Deleting " + objectPath + " from " + bucketName
-            + " failed (attemptNo: " + attemptNo + ") with status code: " + status);
+          + " failed (attemptNo: " + attemptNo + ") with status code: " + status);
 
       } catch (MalformedURLException e) {
         // This shouldn't happen.
@@ -154,7 +213,7 @@ class BlobManager {
         return false;
       } catch (IOException e) {
         logger.log(Level.INFO, "Deleting " + objectPath + " from " + bucketName
-            + " failed (attemptNo: " + attemptNo + ") with " + e.getMessage(), e);
+          + " failed (attemptNo: " + attemptNo + ") with " + e.getMessage(), e);
       }
 
       try {
@@ -188,7 +247,7 @@ class BlobManager {
         return true;
       } catch (ConcurrentModificationException concurrentModificationException) {
         logger.log(Level.INFO, "Deleting metadata for " + objectPath + " in " + bucketName
-            + " failed with ConcurrentModificationException. Attempt: " + attemptNo);
+          + " failed with ConcurrentModificationException. Attempt: " + attemptNo);
       }
       try {
         Thread.sleep(1000 * (1 << attemptNo) + (int) (Math.random() * 1000));
@@ -198,7 +257,7 @@ class BlobManager {
     }
 
     logger.log(Level.WARNING,
-        "Deleting blob metadata for " + objectPath + " from " + bucketName + " failed.");
+      "Deleting blob metadata for " + objectPath + " from " + bucketName + " failed.");
 
     return false;
   }
