@@ -1,7 +1,7 @@
 mobile-backend-starter-android-client-with-AndroidStudio
-=====================================
+========================================================
 
-This project is Android native client sample for Mobile Backend Starter
+This project is an Android native client sample for Mobile Backend Starter
 that works with AndroidStudio.
 
 Disclaimer: This is not an official Google Product.
@@ -21,12 +21,12 @@ Disclaimer: This is not an official Google Product.
 - [Android Studio][6]
 
 ## Setup Instructions
-The instruction below lists just some key steps.
-For detailed setup instructions and documentation visit [Google App Engine developer site] (https://developers.google.com/cloud/samples/mbs).
+These instruction list only the key steps.
+For detailed setup instructions and documentation visit the [Google App Engine developer site] (https://developers.google.com/cloud/samples/mbs).
 
-1. Make sure you have Android SDK with Google APIs level 15 or above installed.
+1. Make sure you have the Android SDK with Google APIs level 15 or above installed.
 
-2. Import the project into Android Studio by the menu "File -> Open".
+2. Import the project into Android Studio (File -> Open).
 
 3. Make sure you have Google APIs selected in your project properties. This option is under Android in Project Build Target.
 
