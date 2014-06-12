@@ -170,7 +170,8 @@ public class BlobEndpoint {
     }
 
     try {
-      Image transformedImage = transformImage(bucketName, objectPath, new ImageTransformer() {
+      Image oldImage = getImageFromGcs(bucketName, objectPath);
+      ImageTransformer transformer = new ImageTransformer() {
         @Override
         public Image transform(Image oldImage) {
           ImagesService imagesService = ImagesServiceFactory.getImagesService();
@@ -178,7 +179,8 @@ public class BlobEndpoint {
           Transform resize = ImagesServiceFactory.makeResize(200, 300);
           return imagesService.applyTransform(resize, oldImage);
         }
-      });
+      };
+      Image transformedImage = transformer.transform(oldImage);
       boolean uploadResult = BlobManager.uploadImagetoGcs(blobAccess, transformedImage);
       if (!uploadResult) {
         throw new InternalServerErrorException("Image upload failed");
@@ -191,19 +193,17 @@ public class BlobEndpoint {
   }
 
   /**
-   * Apply the transform to the image obtained from the specified path in the Google Cloud Storage.
+   * Retrieves the Image from Google Cloud Storage.
    *
    * @param bucketName  the bucket name of the Google Cloud Storage.
    * @param objectName  the object path to the image in the Google Cloud Storage.
-   * @param transformer the image transformer
    * @return
    */
-  private Image transformImage(String bucketName, String objectName, ImageTransformer transformer) {
+  private Image getImageFromGcs(String bucketName, String objectName) {
     BlobstoreService blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
     BlobKey blobKey = blobstoreService.createGsBlobKey(
       "/gs/" + bucketName + "/" + objectName);
-    Image image = ImagesServiceFactory.makeImageFromBlob(blobKey);
-    return transformer.transform(image);
+    return ImagesServiceFactory.makeImageFromBlob(blobKey);
   }
 
 
