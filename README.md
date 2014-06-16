@@ -28,7 +28,7 @@ For detailed setup instructions and documentation visit the [Google App Engine d
 
 2. Import the project into Android Studio (File -> Open).
 
-3. Make sure you have Google APIs selected in your project properties. This option is under Android in Project Build Target.
+3. In Android Studio, select `MobileBackend` module, then generate the client libraries (Tools -> Google Cloud Tools -> Install Client Libraries).
 
 4. Update the value of `PROJECT_ID` in
    `mobile-backend-starter-android-client-core/src/main/java/com/google/cloud/backend/core/Consts.java` to the app_id of your
