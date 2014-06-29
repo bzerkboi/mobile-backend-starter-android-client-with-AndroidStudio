@@ -158,7 +158,7 @@ public class BlobEndpoint {
                                    @Named("objectPath") String objectPath,
                                    @Named("accessMode") BlobAccessMode accessMode,
                                    User user)
-    throws BadRequestException, UnauthorizedException, InternalServerErrorException, NotFoundException {
+    throws BadRequestException, UnauthorizedException, InternalServerErrorException {
     validateUser(user);
     checkDeletePermissions(bucketName, objectPath, user);
     BlobMetadata metadata = BlobManager.getBlobMetadata(bucketName, objectPath);
@@ -169,10 +169,27 @@ public class BlobEndpoint {
       throw new UnauthorizedException("You don't have permissions to upload the transformed image");
     }
 
-    // This method is incomplete.
-    // Implement the rest of the method.
-    // Complete example is located at MobileBackend/snippets/BlobEndpoints.java
-    throw new NotFoundException("This method is not implemented yet.");
+    try {
+      Image oldImage = getImageFromGcs(bucketName, objectPath);
+      ImageTransformer transformer = new ImageTransformer() {
+        @Override
+        public Image transform(Image oldImage) {
+          ImagesService imagesService = ImagesServiceFactory.getImagesService();
+          // Assuming the original image size isn't 300x200.
+          Transform resize = ImagesServiceFactory.makeResize(200, 300);
+          return imagesService.applyTransform(resize, oldImage);
+        }
+      };
+      Image transformedImage = transformer.transform(oldImage);
+      boolean uploadResult = BlobManager.uploadImagetoGcs(blobAccess, transformedImage);
+      if (!uploadResult) {
+        throw new InternalServerErrorException("Image upload failed");
+      }
+    } catch (IOException e) {
+      throw new InternalServerErrorException(e.getMessage(), e);
+    }
+
+    return blobAccess;
   }
 
   /**
@@ -183,8 +200,10 @@ public class BlobEndpoint {
    * @return
    */
   private Image getImageFromGcs(String bucketName, String objectName) {
-    // Implement the method to retrieve Image from Google Cloud Storage.
-    return null;
+    BlobstoreService blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
+    BlobKey blobKey = blobstoreService.createGsBlobKey(
+      "/gs/" + bucketName + "/" + objectName);
+    return ImagesServiceFactory.makeImageFromBlob(blobKey);
   }
 
 
