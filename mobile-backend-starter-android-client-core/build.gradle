@@ -21,7 +21,7 @@ android {
 }
 
 dependencies {
-    compile('com.google.cloud.backend:mobilebackend:v1-1.18.0-rc-SNAPSHOT') {
+    compile('com.google.cloud.backend:mobilebackend:v1-1.19.0-SNAPSHOT') {
         exclude(group: 'org.apache.httpcomponents', module: 'httpclient')
     }
     compile 'com.android.support:appcompat-v7:+'
