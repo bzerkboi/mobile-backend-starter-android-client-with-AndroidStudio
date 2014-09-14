@@ -26,16 +26,14 @@ For detailed setup instructions and documentation visit the [Google App Engine d
 
 1. Make sure you have the Android SDK with Google APIs level 15 or above installed.
 
-2. Import the project into Android Studio (File -> Open).
+2. Import the project into Android Studio (File -> Import Project).
 
-3. In Android Studio, select `MobileBackend` module, then generate the client libraries (Tools -> Google Cloud Tools -> Install Client Libraries).
-
-4. Update the value of `PROJECT_ID` in
+3. Update the value of `PROJECT_ID` in
    `mobile-backend-starter-android-client-core/src/main/java/com/google/cloud/backend/core/Consts.java` to the app_id of your
-   deployed Mobile Backend [5]. Make sure that your Mobile Backend is configured
+   deployed Mobile Backend[5]. Make sure that your Mobile Backend is configured
    with OPEN mode. Also update your `PROJECT_NUMBER` and `WEB_CLIENT_ID` with the values from your console project.
 
-5. Run the application.
+4. Run the application.
 
 [1]: https://developers.google.com/appengine
 [2]: http://developer.android.com/index.html
